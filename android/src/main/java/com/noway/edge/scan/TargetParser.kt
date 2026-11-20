@@ -105,4 +105,48 @@ object TargetParser {
             }
         }
     }
+
+    data class PlanBounds(val first: String, val last: String, val total: Long)
+
+    // First and last target of a source without expanding it, so the scan screen
+    // can show the exact range that will be scanned even for huge CIDRs.
+    private fun boundsOf(source: String): Pair<String, String>? {
+        val text = source.trim()
+        if (text.isBlank() || text.startsWith('#')) return null
+        if ("://" in text) {
+            val uri = URI(text)
+            val host = uri.host ?: return null
+            return host to host
+        }
+        val range = Regex("^\\s*([0-9.]+)\\s*-\\s*([0-9.]+)\\s*$").matchEntire(text)
+        if (range != null) {
+            val start = ipv4ToLong(range.groupValues[1]); val end = ipv4ToLong(range.groupValues[2])
+            require(start <= end) { "Range start must not exceed range end" }
+            return longToIpv4(start) to longToIpv4(end)
+        }
+        if ('/' in text) {
+            val pair = text.split('/', limit = 2)
+            val base = ipv4ToLong(pair[0]); val prefix = pair[1].toInt()
+            require(prefix in 0..32) { "CIDR prefix must be 0-32" }
+            val mask = if (prefix == 0) 0 else (-1L shl (32 - prefix)) and 0xffffffffL
+            val start = base and mask; val size = 1L shl (32 - prefix); val end = start + size - 1
+            return longToIpv4(start) to longToIpv4(end)
+        }
+        return text to text
+    }
+
+    // What a scan will actually cover: first target, last target and total
+    // checks. The scan only ever covers these sources — nothing before the
+    // first target and nothing after the last one.
+    fun plan(config: ScanConfig): PlanBounds {
+        var first: String? = null
+        var last: String? = null
+        config.sources.forEach { source ->
+            boundsOf(source)?.let { (f, l) ->
+                if (first == null) first = f
+                last = l
+            }
+        }
+        return PlanBounds(first ?: "—", last ?: "—", estimate(config))
+    }
 }

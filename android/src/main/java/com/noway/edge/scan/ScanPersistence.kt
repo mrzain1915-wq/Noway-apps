@@ -94,6 +94,15 @@ class ScanPersistence(context: Context) {
         .sortedByDescending(Checkpoint::startedAt)
         .take(limit.coerceIn(1, 500))
 
+    // Deletes every saved job, its stored results and the active-job pointer,
+    // so history starts empty. The caller must make sure no scan is active.
+    @Synchronized
+    fun clearAll() {
+        jobs.listFiles()?.forEach { it.delete() }
+        resultSets.listFiles()?.forEach { it.delete() }
+        if (activeJob.exists()) activeJob.delete()
+    }
+
     @Synchronized
     fun append(jobId: Long, result: ScanResult, saveHeaders: Boolean) {
         resultFile(jobId).appendText(result.toJson(saveHeaders).toString() + "\n")

@@ -61,6 +61,12 @@ object ScanManager {
 
     fun history(): List<ScanPersistence.Checkpoint> = persistence.history()
 
+    fun clearHistory() {
+        require(scanJob?.isActive != true) { "Pause or end the active scan before clearing history" }
+        persistence.clearAll()
+        mutableState.value = ScanSnapshot()
+    }
+
     fun select(jobId: Long) {
         require(scanJob?.isActive != true) { "Pause the active scan before opening another job" }
         var checkpoint = persistence.select(jobId)
