@@ -26,8 +26,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NOWAY_ANDROID_VERSION: "2.3.0"
-  NOWAY_ANDROID_APK: "NOWAY-CDN-CIDR-Scanner-v2.3.0-Android.apk"
+  NOWAY_ANDROID_VERSION: "2.3.1"
+  NOWAY_ANDROID_APK: "NOWAY-CDN-CIDR-Scanner-v2.3.1-Android.apk"
 
 permissions:
   contents: read
@@ -90,7 +90,7 @@ jobs:
     name: Publish Android v2.3.0 release
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && contains(github.event.head_commit.message, 'Release NOWAY Android v2.3.0'))
+      (github.event_name == 'push' && contains(github.event.head_commit.message, 'Release NOWAY Android v2.3.1'))
     needs: [build-android]
     runs-on: ubuntu-latest
     permissions:
