@@ -24,6 +24,26 @@ class ScannerCoreTest {
     }
 
     @Test
+    fun scanPlanCoversOnlyTheGivenRange() {
+        val cidr = ScanConfig(sources = listOf("104.16.0.0/12"), ports = listOf(80, 443), schemes = listOf("http", "https"), authorized = true)
+        val cidrPlan = TargetParser.plan(cidr)
+        assertEquals("104.16.0.0", cidrPlan.first)
+        assertEquals("104.31.255.255", cidrPlan.last)
+        assertEquals(4_194_304L, cidrPlan.total)
+
+        val range = ScanConfig(sources = listOf("103.21.244.0-103.21.247.255"), ports = listOf(80, 443), schemes = listOf("http", "https"), authorized = true)
+        val rangePlan = TargetParser.plan(range)
+        assertEquals("103.21.244.0", rangePlan.first)
+        assertEquals("103.21.247.255", rangePlan.last)
+        assertEquals(4_096L, rangePlan.total)
+
+        // The plan's first/last targets match the units the scanner actually walks.
+        val units = TargetParser.units(range).toList()
+        assertEquals(rangePlan.first, units.first().connectHost)
+        assertEquals(rangePlan.last, units.last().connectHost)
+    }
+
+    @Test
     fun cdnDetectionUsesIndependentEvidence() {
         val cloudflare = CdnDetector.detect(
             cnames = emptyList(),
