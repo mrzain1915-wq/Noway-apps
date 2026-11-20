@@ -12,16 +12,35 @@ android {
         applicationId "com.noway.edge"
         minSdk 23
         targetSdk 35
-        versionCode 23
-        versionName "2.3.0"
+        versionCode 24
+        versionName "2.3.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary true
+    }
+
+    // FIX for "App not installed": pin the debug signing key.
+    // The GitHub runner creates a fresh Android debug key on every run
+    // (the v2.3.0 APK is signed CN=Android Debug, cert created
+    // 2026-11-19 10:58:46 GMT on the runner), so every rebuild has a
+    // DIFFERENT signature and Android refuses to install it over the
+    // previous build of the same package. A committed debug.keystore
+    // (android/debug.keystore, standard debug credentials below) makes
+    // every cloud build sign with the SAME key, so updates install.
+    // This is a debug key only - never use it for a Play Store release.
+    signingConfigs {
+        debug {
+            storeFile file("debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
     }
 
     buildTypes {
         debug {
             applicationIdSuffix ".debug"
             versionNameSuffix "-debug"
+            signingConfig signingConfigs.debug
         }
         release {
             minifyEnabled false
