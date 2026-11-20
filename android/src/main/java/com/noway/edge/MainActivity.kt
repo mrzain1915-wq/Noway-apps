@@ -262,7 +262,7 @@ private fun MetricCard(label: String, value: String, detail: String, color: Colo
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ScanScreen(importedTargets: String, onImport: () -> Unit, snapshot: ScanSnapshot) {
-    var targets by rememberSaveable(importedTargets) { mutableStateOf(importedTargets.ifBlank { "example.com\n192.0.2.0/30" }) }
+    var targets by rememberSaveable(importedTargets) { mutableStateOf(importedTargets) }
     var name by rememberSaveable { mutableStateOf("NOWAY edge intelligence") }; var ports by rememberSaveable { mutableStateOf("80,443") }; var path by rememberSaveable { mutableStateOf("/") }
     var http by rememberSaveable { mutableStateOf(true) }; var https by rememberSaveable { mutableStateOf(true) }; var ws by rememberSaveable { mutableStateOf(false) }; var wss by rememberSaveable { mutableStateOf(false) }
     var method by rememberSaveable { mutableStateOf("SMART") }; var statuses by rememberSaveable { mutableStateOf("101,200,204") }; var timeout by rememberSaveable { mutableStateOf("5") }; var workers by rememberSaveable { mutableStateOf("32") }; var rate by rememberSaveable { mutableStateOf("100") }; var retries by rememberSaveable { mutableStateOf("1") }
@@ -272,14 +272,14 @@ private fun ScanScreen(importedTargets: String, onImport: () -> Unit, snapshot: 
     val active = snapshot.state in setOf(ScanState.RUNNING, ScanState.WAITING, ScanState.PAUSING, ScanState.PREPARING)
     val selectedPerformance = MobilePerformanceProfile.valueOf(performance)
 
-    fun config(): ScanConfig {
+    fun config(requireAuthorization: Boolean = true): ScanConfig {
         val customHeaders = headers.lines().filter(String::isNotBlank).associate { line -> require(':' in line) { "Custom header must be Name: Value" }; line.substringBefore(':').trim() to line.substringAfter(':').trim() }
         val timeoutSeconds = timeout.toDoubleOrNull() ?: throw IllegalArgumentException("Timeout is required")
         val workerCount = workers.toIntOrNull() ?: throw IllegalArgumentException("Workers must be a whole number")
         val checksPerSecond = rate.toIntOrNull() ?: throw IllegalArgumentException("Rate must be a whole number")
         val retryCount = retries.toIntOrNull() ?: throw IllegalArgumentException("Retries must be a whole number")
         val matchingStatuses = statuses.split(Regex("[\\s,]+")).filter(String::isNotBlank).map { value -> value.toIntOrNull() ?: throw IllegalArgumentException("Statuses must be whole numbers") }
-        return ScanConfig(name, targets.lines().map(String::trim).filter(String::isNotBlank), TargetParser.parsePorts(ports), buildList { if (http) add("http"); if (https) add("https"); if (ws) add("ws"); if (wss) add("wss") }, path, method, host, sni, customHeaders, statuses = matchingStatuses, timeoutMs = (timeoutSeconds * 1000).toInt(), workers = workerCount, rateLimit = checksPerSecond, retries = retryCount, verifyTls = verifyTls, saveHeaders = saveHeaders, storeAll = storeAll, requireWifi = requireWifi, requireCharging = requireCharging, authorized = authorized).also(ScanConfig::validate)
+        return ScanConfig(name, targets.lines().map(String::trim).filter(String::isNotBlank), TargetParser.parsePorts(ports), buildList { if (http) add("http"); if (https) add("https"); if (ws) add("ws"); if (wss) add("wss") }, path, method, host, sni, customHeaders, statuses = matchingStatuses, timeoutMs = (timeoutSeconds * 1000).toInt(), workers = workerCount, rateLimit = checksPerSecond, retries = retryCount, verifyTls = verifyTls, saveHeaders = saveHeaders, storeAll = storeAll, requireWifi = requireWifi, requireCharging = requireCharging, authorized = authorized).let { built -> (if (requireAuthorization) built else built.copy(authorized = true)).also(ScanConfig::validate) }
     }
 
     fun startOrConfirm(built: ScanConfig) {
@@ -303,8 +303,19 @@ private fun ScanScreen(importedTargets: String, onImport: () -> Unit, snapshot: 
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         PageHeader("Build an authorized scan", "Paste targets or import TXT/CSV. Settings become a resumable checkpoint.")
-        OutlinedTextField(targets, { targets = it }, label = { Text("Targets") }, supportingText = { Text("URL, hostname, IP, inclusive range, or CIDR — one per line") }, minLines = 5, maxLines = 9, modifier = Modifier.fillMaxWidth(), textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace))
+        OutlinedTextField(targets, { targets = it }, label = { Text("Targets") }, placeholder = { Text("104.16.0.0/12 or 103.21.244.0-103.21.247.255") }, supportingText = { Text("URL, hostname, IP, inclusive range, or CIDR — one per line") }, minLines = 5, maxLines = 9, modifier = Modifier.fillMaxWidth(), textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace))
         TextButton(onImport) { Icon(Icons.Rounded.Download, null); Spacer(Modifier.width(6.dp)); Text("Import TXT / CSV") }
+        val plan = remember(targets, ports, http, https, ws, wss) { runCatching { TargetParser.plan(config(requireAuthorization = false)) }.getOrNull() }
+        if (targets.isNotBlank() && plan != null) {
+            OutlinedCard(border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary), modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                Column(Modifier.padding(12.dp)) {
+                    Text("SCAN PLAN — ONLY THIS RANGE WILL BE SCANNED", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Text("First: ${plan.first}", fontFamily = FontFamily.Monospace, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
+                    Text("Last: ${plan.last}", fontFamily = FontFamily.Monospace, fontSize = 13.sp)
+                    Text("${plan.total} checks in total", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+                }
+            }
+        }
         OutlinedTextField(name, { name = it }, label = { Text("Job name") }, modifier = Modifier.fillMaxWidth())
         Row(horizontalArrangement = Arrangement.spacedBy(9.dp), modifier = Modifier.padding(top = 9.dp)) { OutlinedTextField(ports, { ports = it }, label = { Text("Ports") }, modifier = Modifier.weight(1f)); OutlinedTextField(path, { path = it }, label = { Text("Path") }, modifier = Modifier.weight(1f)) }
         Text("PROTOCOLS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 14.dp, bottom = 6.dp))
@@ -385,10 +396,31 @@ private fun ResultCard(result: ScanResult, compact: Boolean = false) {
 
 @Composable
 private fun HistoryScreen(snapshot: ScanSnapshot, open: () -> Unit) {
-    val jobs = ScanManager.history()
+    var confirmClear by remember { mutableStateOf(false) }
+    var refreshTick by remember { mutableStateOf(0) }
+    val jobs = remember(refreshTick) { ScanManager.history() }
     val active = snapshot.state in setOf(ScanState.PREPARING, ScanState.RUNNING, ScanState.WAITING, ScanState.PAUSING)
     LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxSize()) {
         item { PageHeader("Durable job history", "Every local checkpoint and its evidence remains available across app restarts.") }
+        item {
+            OutlinedButton(
+                onClick = { confirmClear = true },
+                enabled = !active && jobs.isNotEmpty(),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("Clear history") }
+        }
+        if (confirmClear) {
+            item {
+                AlertDialog(
+                    onDismissRequest = { confirmClear = false },
+                    title = { Text("Clear all history?") },
+                    text = { Text("This deletes every saved scan job and its stored results. This cannot be undone.") },
+                    confirmButton = { Button({ ScanManager.clearHistory(); refreshTick++; confirmClear = false }) { Text("Clear all") } },
+                    dismissButton = { TextButton({ confirmClear = false }) { Text("Cancel") } },
+                )
+            }
+        }
         if (jobs.isEmpty()) item { Text("No scan jobs yet", color = MaterialTheme.colorScheme.onSurfaceVariant) }
         items(jobs, key = { it.jobId }) { job ->
             OutlinedCard(border = BorderStroke(1.dp, if (job.jobId == snapshot.jobId) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline), modifier = Modifier.fillMaxWidth()) {
@@ -415,7 +447,7 @@ private fun SettingsScreen(dark: Boolean, onDark: (Boolean) -> Unit) {
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) { Column(Modifier.padding(16.dp)) { SettingToggle("Deep signal dark theme", dark, onDark); HorizontalDivider(Modifier.padding(vertical = 9.dp)); Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Rounded.Shield, null, tint = SignalGreen); Spacer(Modifier.width(10.dp)); Column { Text("Local-first evidence", fontWeight = FontWeight.SemiBold); Text("No account, ads, analytics, or remote control", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } } } }
         SectionTitle("SAFETY CONTRACT", "Built for authorized infrastructure diagnostics")
         listOf("Authorization is required for every new scan.", "Large scan plans require a second confirmation.", "Cookies and authentication challenges are redacted.", "No exploit, credential attack, proxy bypass, or remote control is included.").forEach { item -> Row(Modifier.padding(vertical = 7.dp), verticalAlignment = Alignment.Top) { Box(Modifier.padding(top = 6.dp).size(6.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary)); Spacer(Modifier.width(9.dp)); Text(item, color = MaterialTheme.colorScheme.onSurfaceVariant) } }
-        Text("NOWAY CDN + CIDR Scanner 2.3.0\nAndroid 6.0+ • Windows • Termux", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 18.dp))
+        Text("NOWAY CDN + CIDR Scanner 2.3.1\nAndroid 6.0+ • Windows • Termux", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 18.dp))
     }
 }
 
