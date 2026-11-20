@@ -1,6 +1,6 @@
 # NOWAY Android — install and use
 
-NOWAY v2.3.0 is a native Android app for authorized CDN, CIDR, HTTP, TLS and WebSocket diagnostics. It runs locally, keeps resumable checkpoints, and does not require a NOWAY account.
+NOWAY v2.3.1 is a native Android app for authorized CDN, CIDR, HTTP, TLS and WebSocket diagnostics. It runs locally, keeps resumable checkpoints, and does not require a NOWAY account.
 
 > Scan only systems, domains and address space you own or have explicit written permission to test.
 
@@ -13,12 +13,12 @@ NOWAY v2.3.0 is a native Android app for authorized CDN, CIDR, HTTP, TLS and Web
 ## Install the APK
 
 1. Open the repository's [Releases](https://github.com/drabkb786/Noway-apps/releases) page on the phone.
-2. Open **NOWAY v2.3.0 — Android Mobile**.
-3. Download `NOWAY-CDN-CIDR-Scanner-v2.3.0-Android.apk`.
+2. Open **NOWAY v2.3.1 — Android Mobile**.
+3. Download `NOWAY-CDN-CIDR-Scanner-v2.3.1-Android.apk`.
 4. If Android asks, allow **Install unknown apps** for the browser or file manager you used.
 5. Open the downloaded APK, choose **Install**, then launch **NOWAY**.
 
-The GitHub Actions build is debug-signed for direct sideloading. If Android says an older NOWAY build has an incompatible signature, export any evidence you need, uninstall the older build, and then install v2.3.0.
+The GitHub Actions build is debug-signed for direct sideloading. If Android says an older NOWAY build has an incompatible signature, export any evidence you need, uninstall the older build, and then install v2.3.1.
 
 ## Verify the download
 
@@ -26,7 +26,7 @@ Download `SHA256SUMS-Android.txt` from the same release. In Termux, compare it w
 
 ```bash
 cd ~/storage/downloads
-sha256sum NOWAY-CDN-CIDR-Scanner-v2.3.0-Android.apk
+sha256sum NOWAY-CDN-CIDR-Scanner-v2.3.1-Android.apk
 cat SHA256SUMS-Android.txt
 ```
 
@@ -89,7 +89,7 @@ For a typical phone, start at **Balanced**. Move to **Fast**, then **Heavy**, on
 |---|---|
 | Start does nothing | Scroll to the authorization card, tick it, and correct the red validation message if shown. |
 | Install is blocked | Allow **Install unknown apps** for the app that opened the APK, then retry. |
-| App will not update | Uninstall the older debug-signed build, then install v2.3.0. |
+| App will not update | Uninstall the older debug-signed build, then install v2.3.1. |
 | Phone becomes hot | Pause, select Balanced/Safe, lower workers, and use Wi-Fi while charging. |
 | Many timeouts/resets | Reduce workers and rate before increasing timeout or retries. |
 | Scan pauses in background | Allow notifications and unrestricted battery use for NOWAY. |

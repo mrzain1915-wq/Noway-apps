@@ -6,7 +6,7 @@
 
 [![Windows release](https://github.com/drabkb786/Noway-apps/actions/workflows/build.yml/badge.svg)](https://github.com/drabkb786/Noway-apps/actions/workflows/build.yml)
 [![Android release](https://github.com/drabkb786/Noway-apps/actions/workflows/android.yml/badge.svg)](https://github.com/drabkb786/Noway-apps/actions/workflows/android.yml)
-[![Release](https://img.shields.io/badge/Android-v2.3.0-31D6C5?style=flat-square)](https://github.com/drabkb786/Noway-apps/releases/tag/v2.3.0)
+[![Release](https://img.shields.io/badge/Android-v2.3.1-31D6C5?style=flat-square)](https://github.com/drabkb786/Noway-apps/releases/tag/v2.3.1)
 ![Windows](https://img.shields.io/badge/Windows-10%2F11-6D7CFF?style=flat-square&logo=windows11&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-6.0%2B-31D6C5?style=flat-square&logo=android&logoColor=white)
 ![Termux](https://img.shields.io/badge/Termux-v2.2.0-31D6C5?style=flat-square&logo=android&logoColor=white)
@@ -28,7 +28,7 @@ Latest verified platform packages:
 
 | Platform | Version | Release asset | Start |
 |---|---:|---|---|
-| Native Android APK | 2.3.0 | `NOWAY-CDN-CIDR-Scanner-v2.3.0-Android.apk` | Install, then open NOWAY |
+| Native Android APK | 2.3.1 | `NOWAY-CDN-CIDR-Scanner-v2.3.1-Android.apk` | Install, then open NOWAY |
 | Windows GUI | 2.2.0 | `NOWAY-CDN-CIDR-Scanner-v2.2.0-Windows-Portable.zip` | `NOWAY-CDN-CIDR-Scanner.exe` |
 | Windows CMD | 2.2.0 | `NOWAY-CDN-CIDR-Scanner-v2.2.0-Windows-CMD-Portable.zip` | `NOWAY-Scanner-CMD.cmd --help` |
 | Android Termux | 2.2.0 | `NOWAY-CDN-CIDR-Scanner-v2.2.0-Termux.zip` | `bash termux/install.sh` |
@@ -163,7 +163,7 @@ Keyboard shortcuts:
 
 ## Performance controls
 
-Android v2.3.0 provides Eco (8), Safe (16), Balanced (32), Fast (48), Heavy (64) and Extreme (96) worker presets plus Custom from 1–256. Balanced is the recommended starting point. More than 96 workers, more than 500 checks/sec, or over one million planned checks requires a second confirmation. See [ANDROID.md](ANDROID.md) for heat, battery and Wi-Fi guidance.
+Android v2.3.1 provides Eco (8), Safe (16), Balanced (32), Fast (48), Heavy (64) and Extreme (96) worker presets plus Custom from 1–256. Balanced is the recommended starting point. More than 96 workers, more than 500 checks/sec, or over one million planned checks requires a second confirmation. See [ANDROID.md](ANDROID.md) for heat, battery and Wi-Fi guidance.
 
 Windows presets range from Safe (64 workers) through Maximum (1024), plus Custom. More workers do not automatically mean higher throughput: network latency, router/NAT capacity, remote service behavior and rate limits matter more than CPU thread count for many scans.
 
